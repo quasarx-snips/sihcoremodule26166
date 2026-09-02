@@ -42,8 +42,14 @@ try:
 except ImportError:
     ONNX_AVAILABLE = False
 
+try:
+    from SuperPointPretrainedNetwork.demo_superpoint import SuperPointFrontend
+    SUPERPOINT_AVAILABLE = True
+except ImportError:
+    SUPERPOINT_AVAILABLE = False
+
 ImageArray = np.ndarray
-FeatureType = str  # "crater" | "ridge" | "texture" | "sift"
+FeatureType = str  # "crater" | "ridge" | "texture" | "sift" | "superpoint"
 CraterModelFn = Callable[[ImageArray], List[Tuple[float, float, float, float]]]
 
 
@@ -236,18 +242,81 @@ class TextureGradientDetector:
 # ============================================================================
 
 class SiftDetector:
-    def __init__(self, n_features: int = 4000, contrast_threshold: float = 0.02, edge_threshold: float = 10.0) -> None:
+    def __init__(self, n_features: int = 6000, contrast_threshold: float = 0.01, edge_threshold: float = 15.0,
+                 root_sift: bool = False) -> None:
         self.sift = cv2.SIFT_create(nfeatures=n_features, contrastThreshold=contrast_threshold, edgeThreshold=edge_threshold)
+        self.root_sift = root_sift
+
+    def _normalize_descriptors(self, descriptors: Optional[np.ndarray]) -> np.ndarray:
+        """Apply RootSIFT's L1 + square-root normalization when enabled."""
+        if descriptors is None:
+            return np.empty((0, 128), dtype=np.float32)
+        descriptors = descriptors.astype(np.float32, copy=False)
+        if not self.root_sift or not len(descriptors):
+            return descriptors
+        return np.sqrt(descriptors / np.maximum(descriptors.sum(axis=1, keepdims=True), 1e-12))
 
     def detect(self, enhanced_img: ImageArray, descriptor_offset: int = 0) -> Tuple[List[TerrainFeature], np.ndarray]:
         kps, descs = self.sift.detectAndCompute(enhanced_img, None)
-        descs = descs.astype(np.float32) if descs is not None else np.empty((0, 128), dtype=np.float32)
+        descs = self._normalize_descriptors(descs)
         return [TerrainFeature(feature_type="sift", x=float(kp.pt[0]), y=float(kp.pt[1]), scale=float(kp.size), 
                                orientation=float(kp.angle), confidence=float(kp.response), descriptor_index=descriptor_offset + i) 
                 for i, kp in enumerate(kps)], descs
 
+    def describe_features(self, enhanced_img: ImageArray, features: List[TerrainFeature]) -> np.ndarray:
+        """Compute one SIFT descriptor for every retained terrain feature.
 
-COLOR_MAP_BGR = {"crater": (0, 0, 255), "ridge": (255, 0, 0), "texture": (0, 255, 255), "sift": (255, 0, 255)}
+        Module 04 can therefore match detected craters, ridges, and texture
+        landmarks directly, instead of matching only incidental SIFT points
+        around them.  Features too close to an image border may have no valid
+        descriptor and retain ``descriptor_index=None``.
+        """
+        for feature in features:
+            feature.descriptor_index = None
+        if not features:
+            return np.empty((0, 128), dtype=np.float32)
+        keypoints = []
+        for index, feature in enumerate(features):
+            size = max(3.0, float(feature.scale) if feature.scale else 8.0)
+            angle = float(feature.orientation) if feature.orientation is not None else -1.0
+            keypoints.append(cv2.KeyPoint(float(feature.x), float(feature.y), size, angle,
+                                          float(feature.confidence), 0, index))
+        described_keypoints, descriptors = self.sift.compute(enhanced_img, keypoints)
+        if descriptors is None:
+            return np.empty((0, 128), dtype=np.float32)
+        descriptors = self._normalize_descriptors(descriptors)
+        for descriptor_index, keypoint in enumerate(described_keypoints):
+            original_index = keypoint.class_id
+            if 0 <= original_index < len(features):
+                features[original_index].descriptor_index = descriptor_index
+        return descriptors
+
+
+class SuperPointDetector:
+    """Optional learned keypoint/descriptor backend for difficult imagery."""
+    def __init__(self, weights_path: Optional[Union[str, Path]] = None, n_features: int = 3000,
+                 nms_distance: int = 4, confidence_threshold: float = 0.015) -> None:
+        if not SUPERPOINT_AVAILABLE:
+            raise ImportError("SuperPoint requires the bundled model and PyTorch.")
+        weights = Path(weights_path) if weights_path else Path(__file__).parent / "SuperPointPretrainedNetwork" / "superpoint_v1.pth"
+        if not weights.exists():
+            raise FileNotFoundError(f"SuperPoint weights not found: {weights}")
+        self.n_features = n_features
+        self.frontend = SuperPointFrontend(str(weights), nms_distance, confidence_threshold, nn_thresh=0.7, cuda=False)
+
+    def detect(self, enhanced_img: ImageArray) -> Tuple[List[TerrainFeature], np.ndarray]:
+        points, descriptors, _ = self.frontend.run(enhanced_img.astype(np.float32) / 255.0)
+        if descriptors is None or points.shape[1] == 0:
+            return [], np.empty((0, 256), dtype=np.float32)
+        count = min(self.n_features, points.shape[1])
+        points, descriptors = points[:, :count], descriptors[:, :count].T.astype(np.float32, copy=False)
+        features = [TerrainFeature(feature_type="superpoint", x=float(x), y=float(y), scale=8.0,
+                                   confidence=float(score), descriptor_index=index)
+                    for index, (x, y, score) in enumerate(points.T)]
+        return features, descriptors
+
+
+COLOR_MAP_BGR = {"crater": (0, 0, 255), "ridge": (255, 0, 0), "texture": (0, 255, 255), "sift": (255, 0, 255), "superpoint": (0, 255, 0)}
 
 class TerrainVisualizer:
     def __init__(self, reference_diagonal: float = 1000.0) -> None:
@@ -291,8 +360,10 @@ class TerrainFeatureExtractor:
         ridge_detector: Optional[RidgeDetector] = None,
         texture_detector: Optional[TextureGradientDetector] = None,
         sift_detector: Optional[SiftDetector] = None,
+        superpoint_detector: Optional[SuperPointDetector] = None,
+        descriptor_backend: str = "SIFT",
         visualizer: Optional[TerrainVisualizer] = None,
-        max_total_features: Optional[int] = 1000,
+        max_total_features: Optional[int] = 3000,
         onnx_crater_model_path: Optional[Union[str, Path]] = None,
     ) -> None:
         # Uses Module 1's ImagePreprocessor by default
@@ -301,6 +372,12 @@ class TerrainFeatureExtractor:
         self.ridge_detector = ridge_detector or RidgeDetector()
         self.texture_detector = texture_detector or TextureGradientDetector()
         self.sift_detector = sift_detector or SiftDetector()
+        self.descriptor_backend = descriptor_backend.upper()
+        if self.descriptor_backend not in ("SIFT", "SUPERPOINT"):
+            raise ValueError("descriptor_backend must be 'SIFT' or 'SUPERPOINT'.")
+        self.superpoint_detector = superpoint_detector
+        if self.descriptor_backend == "SUPERPOINT" and self.superpoint_detector is None:
+            self.superpoint_detector = SuperPointDetector(n_features=max_total_features or 3000)
         self.visualizer = visualizer or TerrainVisualizer()
         self.max_total_features = max_total_features
 
@@ -313,17 +390,23 @@ class TerrainFeatureExtractor:
         crater_features = self.crater_detector.detect(enhanced)
         ridge_features = self.ridge_detector.detect(enhanced)
         texture_features = self.texture_detector.detect(enhanced)
-        sift_features, sift_descriptors = self.sift_detector.detect(enhanced)
+        if self.descriptor_backend == "SIFT":
+            descriptor_features, descriptors = self.sift_detector.detect(enhanced)
+        else:
+            descriptor_features, descriptors = self.superpoint_detector.detect(enhanced)
 
-        all_features = crater_features + ridge_features + texture_features + sift_features
+        all_features = crater_features + ridge_features + texture_features + descriptor_features
         raw_count = len(all_features)
-        all_features, sift_descriptors = self._cap_features(all_features, sift_descriptors)
+        all_features, descriptors = self._cap_features(all_features, descriptors)
+        # Classical SIFT can describe the semantic terrain detections too;
+        # SuperPoint retains only its native, already-aligned descriptors.
+        if self.descriptor_backend == "SIFT":
+            descriptors = self.sift_detector.describe_features(enhanced, all_features)
 
         elapsed = time.time() - t0
-        kept_counts = {t: sum(1 for f in all_features if f.feature_type == t) for t in ("crater", "ridge", "texture", "sift")}
-
-        print(f"[Module 3] {Path(image_path).name}: detected {raw_count} raw features -> kept {len(all_features)} after cap ({elapsed:.2f}s)")
-        return enhanced, all_features, sift_descriptors
+        print(f"[Module 3] {Path(image_path).name}: detected {raw_count} raw features -> kept {len(all_features)} after cap; "
+              f"described {len(descriptors)} with {self.descriptor_backend} ({elapsed:.2f}s)")
+        return enhanced, all_features, descriptors
 
     def _cap_features(self, features: List[TerrainFeature], sift_descriptors: np.ndarray) -> Tuple[List[TerrainFeature], np.ndarray]:
         if self.max_total_features is None or len(features) <= self.max_total_features:
@@ -342,12 +425,13 @@ class TerrainFeatureExtractor:
         ranked.sort(key=lambda t: t[0], reverse=True)
         kept = [f for _, f in ranked[:self.max_total_features]]
 
-        kept_sift = [f for f in kept if f.feature_type == "sift"]
-        if kept_sift:
-            new_descriptors = sift_descriptors[[f.descriptor_index for f in kept_sift]]
-            for new_idx, f in enumerate(kept_sift): f.descriptor_index = new_idx
+        kept_described = [f for f in kept if f.descriptor_index is not None]
+        if kept_described:
+            new_descriptors = sift_descriptors[[f.descriptor_index for f in kept_described]]
+            for new_idx, f in enumerate(kept_described): f.descriptor_index = new_idx
         else:
-            new_descriptors = np.empty((0, 128), dtype=np.float32)
+            descriptor_width = sift_descriptors.shape[1] if sift_descriptors.ndim == 2 else 128
+            new_descriptors = np.empty((0, descriptor_width), dtype=np.float32)
 
         return kept, new_descriptors
 

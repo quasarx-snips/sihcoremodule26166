@@ -1,0 +1,36 @@
+{
+  "descriptor_backend": "SUPERPOINT",
+  "lighting": {
+    "raw_matches": 145,
+    "filtered_matches": 122,
+    "correct_matches": 121,
+    "incorrect_matches": 1,
+    "precision_percent": 99.18,
+    "correspondence_visualization": "outputs\\robustness_benchmark\\lighting_correspondences.png"
+  },
+  "rotation_zoom": {
+    "raw_matches": 145,
+    "filtered_matches": 54,
+    "correct_matches": 52,
+    "incorrect_matches": 2,
+    "precision_percent": 96.3,
+    "correspondence_visualization": "outputs\\robustness_benchmark\\rotation_zoom_correspondences.png"
+  },
+  "blur": {
+    "raw_matches": 145,
+    "filtered_matches": 60,
+    "correct_matches": 52,
+    "incorrect_matches": 8,
+    "precision_percent": 86.67,
+    "correspondence_visualization": "outputs\\robustness_benchmark\\blur_correspondences.png"
+  },
+  "combined_harsh": {
+    "raw_matches": 145,
+    "filtered_matches": 11,
+    "correct_matches": 10,
+    "incorrect_matches": 1,
+    "precision_percent": 90.91,
+    "correspondence_visualization": "outputs\\robustness_benchmark\\combined_harsh_correspondences.png"
+  },
+  "comparison_visualization": "outputs\\robustness_benchmark\\all_conditions_comparison.png"
+}
