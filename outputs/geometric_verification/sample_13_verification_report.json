@@ -1,0 +1,31 @@
+{
+  "model_name": "auto",
+  "total_matches": 0,
+  "inlier_count": 0,
+  "outlier_count": 0,
+  "inlier_ratio": 0.0,
+  "iterations_run": 0,
+  "converged": false,
+  "is_valid": false,
+  "error_stats": {
+    "mean": 0.0,
+    "median": 0.0,
+    "std": 0.0,
+    "rmse": 0.0,
+    "min_error": 0.0,
+    "max_error": 0.0
+  },
+  "additional_info": {
+    "reason": "Empty input points"
+  },
+  "descriptor_backend": "SUPERPOINT",
+  "matching_config": {
+    "method": "BF",
+    "ratio": 0.78,
+    "knn_k": 2,
+    "mutual_consistency": true,
+    "match_same_feature_type": true,
+    "unique_train_matches": true
+  },
+  "transformation_matrix": null
+}
