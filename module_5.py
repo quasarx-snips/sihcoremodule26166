@@ -818,8 +818,8 @@ def _to_rgb_uint8(img: np.ndarray) -> np.ndarray:
 # =====================================================================
 
 def process_lunar_image(
-    image_path: str = "lunar_sample/sample_14.png",
-    output_vis_path: str = "lunar_sample/sample_14_verified.png",
+    image_path: str,
+    output_vis_path: str,
     synthetic_transform_for_eval: bool = True
 ) -> RegistrationResult:
     """
@@ -1010,5 +1010,3 @@ def run_unit_tests():
 
 if __name__ == "__main__":
     run_unit_tests()
-    # To run directly on lunar imagery:
-    # process_lunar_image("lunar_sample/sample_14.png")

@@ -568,10 +568,5 @@ def run_real_images(path1: str, path2: str):
 
 if __name__ == "__main__":
     test_synthetic_selection()
-    
-    # Run on requested paths
-    path_main = r"C:\Users\bijan\Desktop\LunaX\lunar_samples\sample_14.png"
-    path_harsh = r"C:\Users\bijan\Desktop\LunaX\outputs\robustness_benchmark\sample_14_combined_harsh.png"
-    run_real_images(path_main, path_harsh)
 
 # --- END OF FILE module_6.py ---

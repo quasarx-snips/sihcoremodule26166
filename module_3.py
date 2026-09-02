@@ -79,14 +79,14 @@ class TerrainFeature:
 class ONNXCraterDetector:
     def __init__(
         self,
-        model_path: Union[str, Path] = "models/crater_unet.onnx",
+        model_path: Optional[Union[str, Path]] = None,
         input_size: Tuple[int, int] = (512, 512),
         confidence_threshold: float = 0.10,
         min_crater_area: float = 3.0,
         max_crater_area: Optional[float] = None,
         circularity_threshold: float = 0.20,
     ) -> None:
-        self.model_path = Path(model_path)
+        self.model_path = Path(model_path) if model_path is not None else None
         self.input_size = input_size
         self.confidence_threshold = confidence_threshold
         self.min_crater_area = min_crater_area
@@ -94,7 +94,7 @@ class ONNXCraterDetector:
         self.circularity_threshold = circularity_threshold
         self.session = None
 
-        if self.model_path.exists() and ONNX_AVAILABLE:
+        if self.model_path is not None and self.model_path.exists() and ONNX_AVAILABLE:
             try:
                 self.session = ort.InferenceSession(str(self.model_path))
             except Exception as e:
@@ -368,7 +368,9 @@ class TerrainFeatureExtractor:
     ) -> None:
         # Uses Module 1's ImagePreprocessor by default
         self.preprocessor = preprocessor or ImagePreprocessor()
-        self.crater_detector = crater_detector or CraterDetector(onnx_model_path=onnx_crater_model_path or "models/crater_unet.onnx")
+        # ONNX is optional: without a caller-supplied path, CraterDetector uses
+        # its classical Hough fallback instead of assuming a repository layout.
+        self.crater_detector = crater_detector or CraterDetector(onnx_model_path=onnx_crater_model_path)
         self.ridge_detector = ridge_detector or RidgeDetector()
         self.texture_detector = texture_detector or TextureGradientDetector()
         self.sift_detector = sift_detector or SiftDetector()
@@ -462,24 +464,7 @@ class TerrainFeatureExtractor:
 # ============================================================================
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        IMAGE_PATH = "lunar_samples/sample_14.png"
-        OUTPUT_DIR = "module3_outputs"
-
-        print("LunaX Module 3 - Terrain Feature Extraction")
-        print("=" * 60)
-        print(f"Processing: {IMAGE_PATH}")
-        print(f"Output: {OUTPUT_DIR}\n")
-
-        extractor = TerrainFeatureExtractor(onnx_crater_model_path="models/crater_unet.onnx")
-        result_paths = extractor.run(IMAGE_PATH, OUTPUT_DIR)
-
-        print("\nSaved outputs:")
-        for name, path in result_paths.items():
-            print(f"  {name}: {path}")
+    if len(sys.argv) == 4 and sys.argv[1] == "extract":
+        TerrainFeatureExtractor().run(sys.argv[2], sys.argv[3])
     else:
-        cmd = sys.argv[1]
-        if cmd == "extract" and len(sys.argv) >= 4:
-            TerrainFeatureExtractor().run(sys.argv[2], sys.argv[3])
-        else:
-            print("Usage: python module_3.py extract <image> <output_dir>")
+        print("Usage: python module_3.py extract <image> <output_dir>")

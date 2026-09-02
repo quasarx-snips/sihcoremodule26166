@@ -370,8 +370,8 @@ def visualize_ground_truth_matches(
 
 
 def run_sample_14_synthetic_demo(
-    image_path: Union[str, Path] = "lunar_samples/sample_14.png",
-    output_path: Union[str, Path] = "outputs/sample_14_synthetic_ground_truth_matches.png",
+    image_path: Union[str, Path],
+    output_path: Union[str, Path],
     tolerance_px: float = 4.0,
     max_matches: int = 300,
     config: Optional[Mapping[str, Any]] = None,
@@ -468,8 +468,8 @@ def _save_robustness_dashboard(panels: Mapping[str, Path], report: Mapping[str, 
 
 
 def run_robustness_benchmark(
-    image_path: Union[str, Path] = "lunar_samples/sample_14.png",
-    output_dir: Union[str, Path] = "outputs/robustness_benchmark",
+    image_path: Union[str, Path],
+    output_dir: Union[str, Path],
     tolerance_px: float = 4.0,
     max_visualized_matches: int = 300,
     descriptor_backend: str = "SUPERPOINT",
@@ -538,4 +538,4 @@ def run_robustness_benchmark(
 
 
 if __name__ == "__main__":
-    run_sample_14_synthetic_demo()
+    print("Import this module and call a demo with explicit image and output paths.")
