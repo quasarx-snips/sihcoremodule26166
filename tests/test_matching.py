@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import cv2
 import numpy as np
 
-from module_4 import (match_feature_sets, match_descriptors, matches_to_correspondences,
+from lunax.matching import (match_feature_sets, match_descriptors, matches_to_correspondences,
                       ratio_test, visualize_matches)
 
 

@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from module_5 import estimate_geometry
+from lunax.geometry import estimate_geometry
 
 
 def test_auto_prefers_similarity_for_rotation_zoom_with_outlier():

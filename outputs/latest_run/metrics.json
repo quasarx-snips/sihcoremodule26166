@@ -1,0 +1,246 @@
+{
+  "metrics": {
+    "metric_scope": "image-based registration metrics; not absolute geographic accuracy",
+    "candidate_matches": 67,
+    "verified_inliers": 9,
+    "outliers": 58,
+    "inlier_ratio": 0.13432835820895522,
+    "evaluated_correspondences": "the supplied candidate correspondence arrays and inlier mask",
+    "candidate_error_statistics": {
+      "count": 67,
+      "mean": 29.54014936313686,
+      "median": 19.77225542153676,
+      "rmse": 47.4068239449794,
+      "max": 248.78468911954462,
+      "p95": 74.55018620023783
+    },
+    "inlier_error_statistics": {
+      "count": 9,
+      "mean": 0.9405024491388391,
+      "median": 1.0205226044541515,
+      "rmse": 1.0632902182217485,
+      "max": 1.7535279789786307,
+      "p95": 1.6438392207461838
+    },
+    "errors": [
+      9.556745074402302,
+      40.87582465395475,
+      16.489341282854777,
+      1.4793060833975136,
+      0.7211205289441674,
+      6.302797943752137,
+      27.103095638682845,
+      16.622448980872687,
+      9.913438656880773,
+      66.0738456892909,
+      10.058645607503731,
+      11.313429766637773,
+      64.61555890222296,
+      8.443299484461601,
+      29.56354661323276,
+      16.689347490056516,
+      14.27488276652747,
+      57.87422144170421,
+      19.004781322518216,
+      9.133178425275252,
+      1.7535279789786307,
+      0.25485972108458244,
+      22.098709776657337,
+      9.986554429910978,
+      1.0999219140949512,
+      18.899550082156697,
+      8.906967433932733,
+      15.162610746348825,
+      32.41252561980916,
+      23.44711697188741,
+      29.128069096100674,
+      27.774673266797304,
+      23.187642587356315,
+      0.3120117879070598,
+      71.62998805336768,
+      13.079035238368206,
+      0.5139255722578542,
+      32.28622561699046,
+      32.29225354631414,
+      11.78085168329978,
+      24.080662584680525,
+      19.77225542153676,
+      42.816527810095245,
+      52.15700345529304,
+      25.85158744238611,
+      11.960341049717755,
+      55.03555385370021,
+      30.088311128673226,
+      75.80169969175363,
+      25.583871316949192,
+      33.25593744561125,
+      21.439833424494875,
+      18.14739212392295,
+      108.87561835472884,
+      42.899257669938045,
+      1.3093258511306403,
+      17.832503279262166,
+      28.58515057877967,
+      39.5610151829867,
+      29.195325230471173,
+      30.967451259639336,
+      16.652446210052126,
+      6.67244122714883,
+      11.286072236667033,
+      1.0205226044541515,
+      248.78468911954462,
+      147.4413342997573
+    ],
+    "inlier_errors": [
+      1.4793060833975136,
+      0.7211205289441674,
+      1.7535279789786307,
+      0.25485972108458244,
+      1.0999219140949512,
+      0.3120117879070598,
+      0.5139255722578542,
+      1.3093258511306403,
+      1.0205226044541515
+    ],
+    "thresholds": {
+      "max_rmse_px": 3.0,
+      "min_inlier_ratio": 0.5
+    },
+    "passed": false,
+    "spatial_coverage": {
+      "occupied_cells": 5,
+      "total_cells": 16,
+      "coverage_percentage": 31.25,
+      "points_per_cell": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          0
+        ],
+        [
+          1,
+          3,
+          0,
+          2
+        ]
+      ]
+    },
+    "transformation_model": "homography",
+    "transformation_matrix": [
+      [
+        0.8878588566449765,
+        -0.038967473143247965,
+        0.7881916948406171
+      ],
+      [
+        0.21057732010766053,
+        0.5754745596887313,
+        11.055114668548745
+      ],
+      [
+        0.0008044550063621935,
+        -0.0014795361776312231,
+        1.0
+      ]
+    ],
+    "correspondence_confidence": 26.64673195284264,
+    "status": "NO RELIABLE CORRESPONDENCE"
+  },
+  "diagnostics": {
+    "execution": "CPU",
+    "timings_seconds": {
+      "preprocessing": 0.005349499988369644,
+      "feature_extraction": 1.3584765000268817,
+      "feature_matching": 0.027463099919259548,
+      "geometric_verification": 1.3154860000358894,
+      "local_refinement": 0.006119200028479099,
+      "registration": 0.003360800095833838,
+      "evaluation": 0.00189070007763803
+    },
+    "total_seconds": 2.7183359999908134,
+    "verification": {
+      "model_name": "homography",
+      "total_matches": 67,
+      "inlier_count": 9,
+      "outlier_count": 58,
+      "inlier_ratio": 0.13432835820895522,
+      "iterations_run": 2000,
+      "converged": true,
+      "is_valid": true,
+      "error_stats": {
+        "mean": 0.9405024491388408,
+        "median": 1.020522604454168,
+        "std": 0.4960254341562532,
+        "rmse": 1.0632902182217503,
+        "min_error": 0.25485972108458244,
+        "max_error": 1.7535279789786307,
+        "percentile_95": 1.6438392207461838
+      },
+      "additional_info": {
+        "threshold": 3.0
+      }
+    },
+    "feature_counts": {
+      "source": 2197,
+      "reference": 2154
+    },
+    "registration": {
+      "model": "projective",
+      "coordinate_convention": "source_to_reference",
+      "transformation": [
+        [
+          0.8878588566449765,
+          -0.038967473143247965,
+          0.7881916948406171
+        ],
+        [
+          0.21057732010766053,
+          0.5754745596887313,
+          11.055114668548745
+        ],
+        [
+          0.0008044550063621935,
+          -0.0014795361776312231,
+          1.0
+        ]
+      ],
+      "source_shape": [
+        256,
+        256
+      ],
+      "reference_shape": [
+        256,
+        256
+      ],
+      "output_shape": [
+        256,
+        256
+      ]
+    },
+    "output_dir": "outputs\\latest_run",
+    "artifact_paths": {
+      "enhanced_source": "outputs\\latest_run\\source_enhanced.png",
+      "enhanced_reference": "outputs\\latest_run\\reference_enhanced.png",
+      "candidate_matches": "outputs\\latest_run\\candidate_matches.png",
+      "verified_matches": "outputs\\latest_run\\inliers_outliers.png",
+      "registered": "outputs\\latest_run\\registered_source.png",
+      "overlay": "outputs\\latest_run\\overlay.png",
+      "difference": "outputs\\latest_run\\difference.png",
+      "registration_panel": "outputs\\latest_run\\registration_panel.png",
+      "report": "outputs\\latest_run\\metrics.json"
+    }
+  }
+}
